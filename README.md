@@ -32,9 +32,15 @@ npm i -g pulp #build-tool
 npm i -g parcel-bundler #fast buill tool for development
 ```
 
-- Start the proj Development
+- Clone and Install dependency
 ```bash
+git clone git@github.com:rinn7e/rinn7e-halogen-starter.git && cd rinn7e-halogen-starter
 psc-package install
+```
+
+### Fast Development Loop
+```bash
+
 
 pscid -I lib:config/dev # include lib and config/dev when compiling as well
 
@@ -48,7 +54,7 @@ in another terminal
 parcel index.html #compile our output dir and serve in localhost:1234
 ```
 
-- Prod
+### Prepare for Production
 
 ```bash
 pulp build -I config/prod --optimise > dist-prod/prod.js
