@@ -6,8 +6,11 @@ module BigPrelude
   , module Effect.Class
   , module Effect.Console
   , module Effect.Aff 
+  , module Effect.Aff.Class 
   , module Data.Functor
   , module Control.Alt
+  , module Control.Monad.Trans.Class
+  , module Control.Monad.Reader.Trans
   , module Data.Tuple
   , module Control.Apply
   , module Control.Plus
@@ -20,6 +23,8 @@ import Prelude
 import Control.Plus
 import Control.Alt
 import Control.Apply
+import Control.Monad.Trans.Class (lift)
+import Control.Monad.Reader.Trans (class MonadAsk, ReaderT, ask, asks, runReaderT)
 import Data.Functor
 import Data.Tuple
 import Data.Maybe
@@ -31,6 +36,7 @@ import Effect
 import Effect.Class
 import Effect.Console (log)
 import Effect.Aff (Aff, launchAff, delay)
+import Effect.Aff.Class (class MonadAff, liftAff)
 
 eitherToMaybe :: forall a b. Either b a -> Maybe a
 eitherToMaybe (Left _) =

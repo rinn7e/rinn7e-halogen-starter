@@ -29,8 +29,11 @@ import Routing.Match as RoutingM --(Match, lit, num)
 import Routing.Match (root, lit, end, num)
 import Routing.Match as RM 
 import Data.Foldable (oneOf)
+import Effect.Aff.AVar (AVar)
+import Effect.Aff.AVar as AVar
 
 import Data.Page
+import Data.Env
 import Page.HeroList as HeroList
 import Page.HeroDetail as HeroDetail
 import Shared.Helper as S
@@ -41,12 +44,17 @@ data Query a
   | Goto Page a
   | HandleHeroDetailPage HeroDetail.Message a
   | HandleHeroListPage HeroList.Message a
+  | ListenForGlobalQuery a
 
 type State =
   { title :: String 
   , currentPage :: Page
   }
 
+data GlobalQuery 
+  = ChangeRouteG Page
+
+type Input = Unit
 
 
 init :: State
@@ -55,9 +63,13 @@ init =
   , currentPage: HeroListPage
   }
 
-component :: H.Component HH.HTML Query Unit Void Aff
+component :: forall m r
+   . MonadAff m
+  => MonadAsk Env m 
+  => H.Component HH.HTML Query Unit Void m
 component = H.lifecycleParentComponent
   { initialState: const init
+  
   , render
   , eval
   , initializer: Just (H.action Init)
@@ -65,20 +77,43 @@ component = H.lifecycleParentComponent
   , receiver: const Nothing
   }
   where
-    render :: State -> H.ParentHTML Query ChildQuery ChildSlot Aff
+    render :: State -> H.ParentHTML Query ChildQuery ChildSlot m
     render state = 
-      view state 
+      case state.currentPage of
+        HeroListPage ->
+          Shared.Layout.view 
+            { viewList: [ HH.slot' cpHeroList HeroList.Slot HeroList.component unit (HE.input HandleHeroListPage) ]
+            , changeRouteQuery: Goto
+            -- , header: (HH.slot' cpCart Cart.Slot Cart.component state.selectProduct (HE.input HandleCart) )
+            }
+        HeroDetailPage id ->
+          Shared.Layout.view 
+            { viewList: [ HH.slot' cpHeroDetail HeroDetail.Slot HeroDetail.component unit (HE.input HandleHeroDetailPage) ]
+            , changeRouteQuery: Goto
+            }
 
-    eval :: Query ~> H.ParentDSL State Query ChildQuery ChildSlot Void Aff
+    eval :: Query ~> H.ParentDSL State Query ChildQuery ChildSlot Void m
     eval query =
       case query of
         Init n -> do
           S.log "Router Initialized"
+          void $ H.fork $ eval $ ListenForGlobalQuery n
           pure n
         Goto page n -> do
           S.log $ show page
           handlePage page
           pure n
+        ListenForGlobalQuery n -> do
+          globalQuery <- asks _.globalQuery
+          query <- H.liftAff $ AVar.take globalQuery
+          case query of
+            NavigateG page -> do
+              handlePage page
+              pure unit
+            _-> do
+              pure unit
+          eval (ListenForGlobalQuery n)
+
         HandleHeroListPage msg n -> do
           case msg of
             HeroList.ChangeRoute page -> do
@@ -93,6 +128,28 @@ component = H.lifecycleParentComponent
               pure n
             _ ->
               pure n
+    
+    handleUrl page = do
+      pushStateInterface <- asks _.pushStateInterface
+      H.liftEffect $ do
+        case page of
+          HeroListPage -> 
+            pushStateInterface.pushState (unsafeToForeign {}) $ path <> "/heroes"
+          HeroDetailPage heroId -> 
+            pushStateInterface.pushState (unsafeToForeign {}) $ path <> "/hero/" <> (show heroId)
+            
+      H.modify_ (_ { currentPage = page })
+      where
+        path = ""
+    
+    handlePage page = do
+      currentPage <- H.gets (\s -> s.currentPage)
+      case (currentPage == page) of
+        true ->
+          pure unit
+        false -> do
+          handleUrl page
+          pure unit
 
 
 routing :: _
@@ -107,18 +164,7 @@ routing =
   where
     rootRoute = root
 
-handleUrl page = do
-  H.liftEffect $ do
-    pushStateInterface <- RoutingP.makeInterface
-    case page of
-      HeroListPage -> 
-        pushStateInterface.pushState (unsafeToForeign {}) $ path <> "/heroes"
-      HeroDetailPage heroId -> 
-        pushStateInterface.pushState (unsafeToForeign {}) $ path <> "/hero/" <> (show heroId)
-        
-  H.modify_ (_ { currentPage = page })
-  where
-    path = ""
+
 
 type ChildQuery = 
   Coproduct2
@@ -133,37 +179,6 @@ type ChildSlot =
 cpHeroList = HCC.cp1
 cpHeroDetail = HCC.cp2
 
-handlePage page = do
-  currentPage <- H.gets (\s -> s.currentPage)
-  case (currentPage == page) of
-    true ->
-      pure unit
-    false -> do
-      handleUrl page
-      pure unit
 
-routeSignal :: H.HalogenIO Query Void Aff -> Aff (Effect Unit)
-routeSignal driver = liftEffect do
-    pushStateInterface <- RoutingP.makeInterface
-    RoutingP.matches routing 
-      (\ _ newRoute -> do
-        liftEffect $ log $ "Parsing Route: " <> show newRoute 
-        _ <- launchAff $ driver.query $ H.action $ Goto newRoute
-        pure unit
-      )
-      pushStateInterface        
 
-view :: State -> _
-view state = 
-  case state.currentPage of
-    HeroListPage ->
-      Shared.Layout.view 
-        { viewList: [ HH.slot' cpHeroList HeroList.Slot HeroList.component unit (HE.input HandleHeroListPage) ]
-        , changeRouteQuery: Goto
-        -- , header: (HH.slot' cpCart Cart.Slot Cart.component state.selectProduct (HE.input HandleCart) )
-        }
-    HeroDetailPage id ->
-      Shared.Layout.view 
-        { viewList: [ HH.slot' cpHeroDetail HeroDetail.Slot HeroDetail.component unit (HE.input HandleHeroDetailPage) ]
-        , changeRouteQuery: Goto
-        }
+

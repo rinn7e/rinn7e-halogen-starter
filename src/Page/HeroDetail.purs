@@ -31,7 +31,7 @@ component = H.component
   where
     render _ =
       HH.div [ S.cl "bg-green-light min-h-screen p-4"]
-        [ HH.text "This is hero detail View"]
+        [ HH.text "This is hero detail View "]
 
     eval :: Query ~> H.ComponentDSL State Query Message m
     eval query = case query of 

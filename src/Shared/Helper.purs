@@ -1,30 +1,29 @@
 module Shared.Helper where
 
 import BigPrelude
+import CSS hiding (map)
+
+import Data.Array as DA
+import Data.Error as Error
+import Data.Foldable (foldr)
+import Data.Int as DI
+import Data.Maybe (Maybe(..))
+import Data.Tuple (Tuple(..))
 import Effect (Effect)
--- import Button as B
+import Effect.Aff (Aff)
+import Effect.Console as C
+import Effect.Random (random)
+import Foreign as F
 import Halogen as H
+import Halogen.Aff as HA
 import Halogen.HTML as HH
+import Halogen.HTML.CSS as HC
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Halogen.HTML.Properties.ARIA as AR
-import Halogen.HTML.CSS as HC
-import CSS hiding (map)
-import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
-import Data.Maybe (Maybe(..))
-import Data.Tuple (Tuple(..))
-import Data.Array as DA
--- import Halogen.Aff (Aff)
-import Effect.Random (random)
-import Effect.Aff (Aff)
-import Effect.Console as C
 import Web.Storage.Storage as Storage
-import Foreign as F
-import Data.Int as DI
-
-import Data.Error as Error
-import Data.Foldable (foldr)
+import Effect.Aff.AVar as AVar
 
 
 cl :: String -> _
@@ -109,3 +108,7 @@ filterMaybe ls = ls
             Nothing -> ""
             Just a -> a
         )
+
+raiseG query = do
+  globalQuery <- asks _.globalQuery
+  H.liftAff $ AVar.put query globalQuery
