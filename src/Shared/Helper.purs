@@ -110,5 +110,5 @@ filterMaybe ls = ls
         )
 
 raiseG query = do
-  globalQuery <- asks _.globalQuery
-  H.liftAff $ AVar.put query globalQuery
+  globalMessage <- asks _.globalMessage
+  H.liftAff $ AVar.put query globalMessage

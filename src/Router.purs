@@ -44,14 +44,14 @@ data Query a
   | Goto Page a
   | HandleHeroDetailPage HeroDetail.Message a
   | HandleHeroListPage HeroList.Message a
-  | ListenForGlobalQuery a
+  | ListenForGlobalMessage a
 
 type State =
   { title :: String 
   , currentPage :: Page
   }
 
-data GlobalQuery 
+data GlobalMessage 
   = ChangeRouteG Page
 
 type Input = Unit
@@ -97,22 +97,22 @@ component = H.lifecycleParentComponent
       case query of
         Init n -> do
           S.log "Router Initialized"
-          void $ H.fork $ eval $ ListenForGlobalQuery n
+          void $ H.fork $ eval $ ListenForGlobalMessage n
           pure n
         Goto page n -> do
           S.log $ show page
           handlePage page
           pure n
-        ListenForGlobalQuery n -> do
-          globalQuery <- asks _.globalQuery
-          query <- H.liftAff $ AVar.take globalQuery
+        ListenForGlobalMessage n -> do
+          globalMessage <- asks _.globalMessage
+          query <- H.liftAff $ AVar.take globalMessage
           case query of
             NavigateG page -> do
               handlePage page
               pure unit
             _-> do
               pure unit
-          eval (ListenForGlobalQuery n)
+          eval (ListenForGlobalMessage n)
 
         HandleHeroListPage msg n -> do
           case msg of
@@ -129,6 +129,17 @@ component = H.lifecycleParentComponent
             _ ->
               pure n
     
+    handlePage :: Page -> _
+    handlePage page = do
+      currentPage <- H.gets (\s -> s.currentPage)
+      case (currentPage == page) of
+        true ->
+          pure unit
+        false -> do
+          handleUrl page
+          pure unit
+
+
     handleUrl page = do
       pushStateInterface <- asks _.pushStateInterface
       H.liftEffect $ do
@@ -142,14 +153,6 @@ component = H.lifecycleParentComponent
       where
         path = ""
     
-    handlePage page = do
-      currentPage <- H.gets (\s -> s.currentPage)
-      case (currentPage == page) of
-        true ->
-          pure unit
-        false -> do
-          handleUrl page
-          pure unit
 
 
 routing :: _

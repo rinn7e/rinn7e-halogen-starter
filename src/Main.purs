@@ -17,11 +17,11 @@ main :: Effect Unit
 main = do
   log "Purescript is starting..."
   HA.runHalogenAff do
-    globalQuery <- AVar.empty
+    globalMessage <- AVar.empty
     pushStateInterface <- liftEffect $ RoutingP.makeInterface
     let 
       environment :: Env
-      environment = { pushStateInterface, globalQuery}
+      environment = { pushStateInterface, globalMessage}
 
       rootComponent :: H.Component HH.HTML Router.Query Router.Input Void Aff
       rootComponent = H.hoist (runAppM environment) Router.component

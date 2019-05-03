@@ -5,12 +5,12 @@ import Data.Page
 import Effect.Aff.AVar (AVar)
 import Routing.PushState (PushStateInterface)
 
-data GlobalQuery 
+data GlobalMessage 
   = LogoutG 
   | NavigateG Page
 
 type Env = 
-  { globalQuery :: AVar GlobalQuery
+  { globalMessage :: AVar GlobalMessage
   , pushStateInterface :: PushStateInterface
   }
 
