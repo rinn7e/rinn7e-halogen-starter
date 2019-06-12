@@ -26,23 +26,22 @@ I created this for my own project, but hopefully somebody will find this useful.
 - Pre-requisite
 ```bash
 npm i -g purescript #main-compiler
-npm i -g pscid #fast reload
-npm i -g psc-package #manage package
-npm i -g pulp #build-tool
+npm i -g pscid@2.8.1 #fast reload
+npm i -g spago #manage package and build
 npm i -g parcel-bundler #fast build tool for development
 ```
 
 - Clone and Install dependency
 ```bash
 git clone git@github.com:rinn7e/rinn7e-halogen-starter.git && cd rinn7e-halogen-starter
-psc-package install
+spago install
 ```
 
 ### Fast Development Loop
 ```bash
 
 
-pscid -I lib:config/dev # include lib and config/dev when compiling as well
+pscid # this will run `npm run build` or `spago build -p 'lib/**/*.purs' 'config/dev/**/*.purs'`
 
 #click-b to build, then it will auto-reload when code changed, some changes required full build again, click-b to build again
 
@@ -57,7 +56,7 @@ parcel index.html #compile our output dir and serve in localhost:1234
 ### Prepare for Production
 
 ```bash
-pulp build -I config/prod --optimise > dist-prod/prod.js
+spago bundle-module -p 'lib/**/*.purs' 'config/dev/**/*.purs' -t dist-prod/prod.js
 # this will compile to optimize js, then we can <script> src it in prod index.html
 ```
 

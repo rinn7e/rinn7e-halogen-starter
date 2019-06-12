@@ -1,0 +1,26 @@
+{
+  "name": "halogen-starter",
+  "version": "1.0.0",
+  "description": "## Feature - Contain router system built-in - Default `BigPrelude` to contain shared module - Halogen HTML helper, Affjax(Http) Helper - Development command, Production command",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "build": "spago build -p 'lib/**/*.purs' 'config/dev/**/*.purs'",
+    "build:prod": "spago bundle-module -p 'lib/**/*.purs' 'config/dev/**/*.purs' -t dist-prod/prod.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rinn7e/rinn7e-halogen-starter.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rinn7e/rinn7e-halogen-starter/issues"
+  },
+  "homepage": "https://github.com/rinn7e/rinn7e-halogen-starter#readme"
+}
