@@ -29,7 +29,7 @@ npm i -g purescript #main-compiler
 npm i -g pscid #fast reload
 npm i -g psc-package #manage package
 npm i -g pulp #build-tool
-npm i -g parcel-bundler #fast buill tool for development
+npm i -g parcel-bundler #fast build tool for development
 ```
 
 - Clone and Install dependency
